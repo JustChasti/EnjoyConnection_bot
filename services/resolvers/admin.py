@@ -8,7 +8,7 @@ from aiogram.types import (
 from aiogram.fsm.context import FSMContext
 from loguru import logger
 
-from config import texts
+from config import texts, config
 from services.api_requests import api_client
 from services.decorators import handle_resolver_errors
 from services.states import StateMachine
@@ -91,7 +91,17 @@ async def resolve_user_info_process(message: Message, state: FSMContext):
             user_id=user_id, active_subscriber=data.get('active_subscriber', False),
             subscription_end=data.get('subscription_end', False),
             free_messages=data.get('free_messages', 0),
-            day_limit=data.get('day_limit', 0), is_admin=data.get('is_admin', False)
+            day_limit=data.get('day_limit', 0), is_admin=data.get('is_admin', False),
+            facts_count=data.get('facts_count', 0),
+            relationship_stage=config.RELATIONSHIP_STAGE_LABELS.get(
+                data.get('relationship_stage'), data.get('relationship_stage', '—')
+            ),
+            relationship_goal=config.GOAL_LABELS.get(
+                data.get('relationship_goal'), data.get('relationship_goal', '—')
+            ),
+            gender=config.GENDER_LABELS.get(data.get('gender'), data.get('gender', '—')),
+            age=data.get('age', '—'),
+            created_at=data.get('created_at', '—'),
         )
         await message.answer(info_text, reply_markup=keyboard)
     else:
