@@ -7,12 +7,13 @@ from aiogram.types import (
 from aiogram.fsm.context import FSMContext
 from loguru import logger
 
-from config import texts
+from config import texts, config
 from services.api_requests import api_client
 from services.decorators import handle_resolver_errors
 from services.resolvers.keyboards import (
     get_menu_keyboard,
-    get_lk_menu_keyboard
+    get_lk_menu_keyboard,
+    get_profile_anketa_keyboard,
 )
 
 
@@ -50,6 +51,13 @@ async def resolve_model_message(message: Message):
     if len(answer) > 4000:
         answer = answer[:4000] + "\n...\n(ответ обрезан)"
     await message.answer(answer, parse_mode="HTML", reply_markup=get_menu_keyboard())
+
+    # Бэкенд сообщает, когда предложить заполнить анкету (первое сообщение нового юзера)
+    if response_data.get("show_questionnaire"):
+        await message.answer(
+            texts.PROFILE_PROMPT,
+            reply_markup=get_profile_anketa_keyboard()
+        )
 
 
 @handle_resolver_errors
@@ -104,19 +112,9 @@ async def resolve_about(message: Message):
 
 
 # личный кабинет
-RELATIONSHIP_STAGE_LABELS = {
-    "acquaintance": "Знакомство",
-    "friend": "Дружба",
-    "romantic": "Отношения",
-}
-
-# Порядок стадий и их позиция на шкале (0.0 - 1.0)
-RELATIONSHIP_STAGES_ORDER = ["acquaintance", "friend", "romantic"]
-
-
-def build_relationship_progress(stage: str) -> str:
-    """Строит визуальный прогресс-бар отношений"""
-    stages = RELATIONSHIP_STAGES_ORDER
+def build_relationship_progress(stage: str, goal: str) -> str:
+    """Строит визуальный прогресс-бар отношений с учётом цели общения"""
+    stages = config.RELATIONSHIP_PATHS.get(goal, config.RELATIONSHIP_PATHS["romantic"])
     total_bars = 10  # длина шкалы
 
     try:
@@ -134,7 +132,7 @@ def build_relationship_progress(stage: str) -> str:
     # Собираем текст с метками стадий
     lines = []
     for i, s in enumerate(stages):
-        label = RELATIONSHIP_STAGE_LABELS.get(s, s)
+        label = config.RELATIONSHIP_STAGE_LABELS.get(s, s)
         if i == current_index:
             lines.append(f"  ➤ {label}")
         elif i < current_index:
@@ -151,23 +149,8 @@ def build_relationship_progress(stage: str) -> str:
     )
 
 
-@handle_resolver_errors
-async def resolve_menu_button(message: Message, state: FSMContext):
-    """Обработка нажатия кнопки 'Меню' — показ личного кабинета"""
-    # Сбрасываем FSM, чтобы не конфликтовать с другими состояниями
-    await state.clear()
-    user_id = message.from_user.id
-    response = await api_client.get_user_stats(user_id)
-
-    if not response or not response.get("success"):
-        await message.answer(
-            texts.LK_LOAD_ERROR,
-            reply_markup=get_menu_keyboard()
-        )
-        return
-
-    # Парсим данные
-    data = response.get("data", {})
+def build_lk_text(data: dict) -> str:
+    """Собирает текст личного кабинета из данных /user/info"""
     active_sub = data.get("active_subscriber", False)
     sub_end = data.get("subscription_end", "")
     free_messages = data.get("free_messages", 0)
@@ -177,13 +160,39 @@ async def resolve_menu_button(message: Message, state: FSMContext):
     else:
         sub_status = texts.LK_SUB_INACTIVE
 
-    text = texts.LK_PROFILE.format(
+    gender = config.GENDER_LABELS.get(data.get("gender"), "не указан")
+    age = data.get("age", "—")
+
+    return texts.LK_PROFILE.format(
         sub_status=sub_status,
         free_messages=free_messages,
+        gender=gender,
+        age=age,
     )
 
-    keyboard = get_lk_menu_keyboard()
-    await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
+
+async def render_lk(target: Message, user_id: int):
+    """Загружает данные и показывает экран личного кабинета.
+
+    target — объект Message, на котором вызывается .answer (message или callback.message).
+    """
+    response = await api_client.get_user_stats(user_id)
+    if not response or not response.get("success"):
+        await target.answer(texts.LK_LOAD_ERROR, reply_markup=get_menu_keyboard())
+        return
+
+    data = response.get("data", {})
+    await target.answer(
+        build_lk_text(data), reply_markup=get_lk_menu_keyboard(), parse_mode="HTML"
+    )
+
+
+@handle_resolver_errors
+async def resolve_menu_button(message: Message, state: FSMContext):
+    """Обработка нажатия кнопки 'Меню' — показ личного кабинета"""
+    # Сбрасываем FSM, чтобы не конфликтовать с другими состояниями
+    await state.clear()
+    await render_lk(message, message.from_user.id)
 
 
 @handle_resolver_errors
@@ -202,7 +211,8 @@ async def resolve_menu_relationship(callback: CallbackQuery):
 
     data = response.get("data", {})
     stage = data.get("relationship_stage", "acquaintance")
-    progress_text = build_relationship_progress(stage)
+    goal = data.get("relationship_goal", "romantic")
+    progress_text = build_relationship_progress(stage, goal)
     await callback.message.answer(
         progress_text, parse_mode="HTML", reply_markup=get_menu_keyboard()
     )

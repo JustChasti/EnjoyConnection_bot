@@ -20,6 +20,10 @@ class StateMachine(StatesGroup):
     # === ПРОМОКОД === #
     promo_waiting_code = State() # пользователь вводит промокод для активации
 
+    # === ПРОФИЛЬ === #
+    profile_survey_age = State() # ввод возраста в пошаговой анкете
+    profile_edit_age = State()   # ввод возраста при отдельном редактировании
+
     # === ОБЫЧНОЕ ОБЩЕНИЕ === #
     # (пока не нужны, но можно добавить позже)
     # conversation = State()

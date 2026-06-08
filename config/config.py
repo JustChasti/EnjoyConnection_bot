@@ -17,3 +17,17 @@ PLAN_LABELS = {
     "3months": "3 месяца",
     "year":    "1 год",
 }
+
+GENDER_LABELS = {"male": "Мужской", "female": "Женский"}
+GOAL_LABELS = {"best_friend": "Лучшие друзья", "romantic": "Романтические партнёры"}
+RELATIONSHIP_STAGE_LABELS = {
+    "acquaintance": "Знакомство",
+    "friend": "Дружба",
+    "best_friend": "Лучшие друзья",
+    "romantic": "Романтика",
+}
+# Путь стадий в зависимости от цели общения (для шкалы прогресса)
+RELATIONSHIP_PATHS = {
+    "best_friend": ["acquaintance", "friend", "best_friend"],
+    "romantic":    ["acquaintance", "friend", "romantic"],
+}

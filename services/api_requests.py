@@ -54,8 +54,25 @@ class APIClient:
 
     async def get_user_stats(self, telegram_id: int) -> dict[str, Any]:
         "Получить статистику пользователя для личного кабинета"
-        return await self._request("POST", "/user/info", 
+        return await self._request("POST", "/user/info",
                                    json={"user_id": telegram_id}
+                                  )
+
+    async def update_personality(
+        self, user_id: int, gender: str | None = None, age: int | None = None
+    ) -> dict[str, Any]:
+        "Заполнить/изменить пол и/или возраст пользователя"
+        payload: dict[str, Any] = {"user_id": user_id}
+        if gender is not None:
+            payload["gender"] = gender
+        if age is not None:
+            payload["age"] = age
+        return await self._request("PATCH", "/user/personality", json=payload)
+
+    async def update_relationship_goal(self, user_id: int, goal: str) -> dict[str, Any]:
+        "Изменить цель общения (romantic | best_friend)"
+        return await self._request("PATCH", "/user/relationship-goal",
+                                   json={"user_id": user_id, "goal": goal}
                                   )
 
     async def get_about(self) -> dict[str, Any]:

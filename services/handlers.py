@@ -46,6 +46,21 @@ from services.resolvers.user_chat import (
     resolve_menu_button,
     resolve_menu_relationship,
 )
+from services.resolvers.profile import (
+    resolve_profile_fill,
+    resolve_profile_skip,
+    resolve_survey_gender,
+    resolve_survey_age,
+    resolve_survey_goal,
+    resolve_profile_edit_menu,
+    resolve_edit_to_lk,
+    resolve_edit_age_request,
+    resolve_edit_age,
+    resolve_edit_gender_request,
+    resolve_edit_gender_set,
+    resolve_edit_goal_request,
+    resolve_edit_goal_set,
+)
 
 router = Router()
 
@@ -174,11 +189,71 @@ def setup_router():
     async def successful_payment(message: Message, state: FSMContext):
         await resolve_successful_payment(message, state)
 
-    # === ЛИЧНЫЙ КАБИНЕТ === #
+    # === ПРОФИЛЬ === #
 
+    # Кнопка «Меню» зарегистрирована до состояний ввода возраста, чтобы всегда
+    # выходить из анкеты/редактирования (сброс состояния внутри resolve_menu_button).
     @router.message(F.text == "Меню 📊")
     async def handle_menu_button(message: Message, state: FSMContext):
         await resolve_menu_button(message, state)
+
+    @router.callback_query(F.data == "profile_fill")
+    async def profile_fill(callback: CallbackQuery):
+        await resolve_profile_fill(callback)
+
+    @router.callback_query(F.data == "profile_skip")
+    async def profile_skip(callback: CallbackQuery, state: FSMContext):
+        await resolve_profile_skip(callback, state)
+
+    @router.callback_query(F.data.startswith("survey_gender_"))
+    async def survey_gender(callback: CallbackQuery, state: FSMContext):
+        await resolve_survey_gender(callback, state)
+
+    @router.message(StateMachine.profile_survey_age)
+    async def survey_age(message: Message, state: FSMContext):
+        await resolve_survey_age(message, state)
+
+    @router.callback_query(F.data.startswith("survey_goal_"))
+    async def survey_goal(callback: CallbackQuery, state: FSMContext):
+        await resolve_survey_goal(callback, state)
+
+    @router.callback_query(F.data == "profile_edit")
+    async def profile_edit(callback: CallbackQuery, state: FSMContext):
+        await resolve_profile_edit_menu(callback, state)
+
+    @router.callback_query(F.data == "pedit_back")
+    async def pedit_back(callback: CallbackQuery, state: FSMContext):
+        await resolve_profile_edit_menu(callback, state)
+
+    @router.callback_query(F.data == "pedit_to_lk")
+    async def pedit_to_lk(callback: CallbackQuery, state: FSMContext):
+        await resolve_edit_to_lk(callback, state)
+
+    @router.callback_query(F.data == "pedit_age")
+    async def pedit_age(callback: CallbackQuery, state: FSMContext):
+        await resolve_edit_age_request(callback, state)
+
+    @router.message(StateMachine.profile_edit_age)
+    async def pedit_age_entered(message: Message, state: FSMContext):
+        await resolve_edit_age(message, state)
+
+    @router.callback_query(F.data == "pedit_gender")
+    async def pedit_gender(callback: CallbackQuery):
+        await resolve_edit_gender_request(callback)
+
+    @router.callback_query(F.data.startswith("pedit_gender_"))
+    async def pedit_gender_set(callback: CallbackQuery):
+        await resolve_edit_gender_set(callback)
+
+    @router.callback_query(F.data == "pedit_goal")
+    async def pedit_goal(callback: CallbackQuery):
+        await resolve_edit_goal_request(callback)
+
+    @router.callback_query(F.data.startswith("pedit_goal_"))
+    async def pedit_goal_set(callback: CallbackQuery):
+        await resolve_edit_goal_set(callback)
+
+    # === ЛИЧНЫЙ КАБИНЕТ === #
 
     @router.callback_query(F.data == "menu_relationship")
     async def menu_relationship(callback: CallbackQuery):

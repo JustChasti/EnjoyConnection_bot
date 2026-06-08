@@ -77,6 +77,72 @@ def get_lk_menu_keyboard() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(
             text="Показать прогресс отношений", callback_data="menu_relationship")
         ],
+        [InlineKeyboardButton(text="Редактировать профиль", callback_data="profile_edit")],
         [InlineKeyboardButton(text="Ввести промокод", callback_data="menu_promo")],
         [InlineKeyboardButton(text="Купить подписку", callback_data="menu_buy")],
+    ])
+
+
+# === ПРОФИЛЬ / АНКЕТА === #
+
+def get_profile_anketa_keyboard() -> InlineKeyboardMarkup:
+    """Предложение заполнить профиль после первого сообщения"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Заполнить", callback_data="profile_fill")],
+        [InlineKeyboardButton(text="Пропустить", callback_data="profile_skip")],
+    ])
+
+
+def get_profile_edit_keyboard() -> InlineKeyboardMarkup:
+    """Меню редактирования профиля"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Возраст", callback_data="pedit_age")],
+        [InlineKeyboardButton(text="Пол", callback_data="pedit_gender")],
+        [InlineKeyboardButton(text="Цель общения", callback_data="pedit_goal")],
+        [InlineKeyboardButton(text="Назад", callback_data="pedit_to_lk")],
+    ])
+
+
+def get_survey_gender_keyboard() -> InlineKeyboardMarkup:
+    """Выбор пола в пошаговой анкете"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Я мужчина", callback_data="survey_gender_male")],
+        [InlineKeyboardButton(text="Я женщина", callback_data="survey_gender_female")],
+    ])
+
+
+def get_survey_goal_keyboard() -> InlineKeyboardMarkup:
+    """Выбор цели общения в пошаговой анкете"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Лучшие друзья", callback_data="survey_goal_best_friend")],
+        [InlineKeyboardButton(
+            text="Романтические партнёры", callback_data="survey_goal_romantic")
+        ],
+    ])
+
+
+def get_edit_gender_keyboard() -> InlineKeyboardMarkup:
+    """Выбор пола при редактировании профиля"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Я мужчина", callback_data="pedit_gender_male")],
+        [InlineKeyboardButton(text="Я женщина", callback_data="pedit_gender_female")],
+        [InlineKeyboardButton(text="Назад", callback_data="pedit_back")],
+    ])
+
+
+def get_edit_goal_keyboard() -> InlineKeyboardMarkup:
+    """Выбор цели общения при редактировании профиля"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Лучшие друзья", callback_data="pedit_goal_best_friend")],
+        [InlineKeyboardButton(
+            text="Романтические партнёры", callback_data="pedit_goal_romantic")
+        ],
+        [InlineKeyboardButton(text="Назад", callback_data="pedit_back")],
+    ])
+
+
+def get_edit_back_keyboard() -> InlineKeyboardMarkup:
+    """Кнопка Назад для экрана ввода возраста"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Назад", callback_data="pedit_back")],
     ])
