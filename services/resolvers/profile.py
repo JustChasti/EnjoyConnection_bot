@@ -14,10 +14,13 @@ from services.resolvers.keyboards import (
     get_menu_keyboard,
     get_survey_gender_keyboard,
     get_survey_goal_keyboard,
+    get_survey_mask_keyboard,
     get_profile_edit_keyboard,
     get_edit_gender_keyboard,
     get_edit_goal_keyboard,
     get_edit_back_keyboard,
+    get_mask_select_keyboard,
+    get_mask_confirm_keyboard,
 )
 from services.resolvers.user_chat import render_lk
 
@@ -97,10 +100,24 @@ async def resolve_survey_age(message: Message, state: FSMContext):
 
 @handle_resolver_errors
 async def resolve_survey_goal(callback: CallbackQuery, state: FSMContext):
-    """Цель общения выбрана — завершаем анкету"""
+    """Цель общения выбрана — переходим к выбору персонажа"""
     await callback.answer()
     goal = callback.data.removeprefix("survey_goal_")
     response = await api_client.update_relationship_goal(callback.from_user.id, goal)
+    if not response.get("success"):
+        await callback.message.answer(_profile_error_text(response))
+        return
+    await callback.message.answer(
+        texts.MASK_SELECT_MENU, reply_markup=get_survey_mask_keyboard()
+    )
+
+
+@handle_resolver_errors
+async def resolve_survey_mask(callback: CallbackQuery, state: FSMContext):
+    """Персонаж выбран в анкете — завершаем анкету (без предупреждения)"""
+    await callback.answer()
+    mask_name = callback.data.removeprefix("mask_goal_")
+    response = await api_client.update_mask(callback.from_user.id, mask_name)
     if not response.get("success"):
         await callback.message.answer(_profile_error_text(response))
         return
@@ -203,3 +220,64 @@ async def resolve_edit_goal_set(callback: CallbackQuery):
     await callback.message.answer(
         texts.PROFILE_GOAL_UPDATED, reply_markup=get_profile_edit_keyboard()
     )
+
+
+# === СМЕНА ПЕРСОНАЖА (из личного кабинета, с предупреждением) === #
+
+@handle_resolver_errors
+async def resolve_edit_mask_request(callback: CallbackQuery, state: FSMContext):
+    """Показ меню выбора персонажа: грузим доступные маски, сохраняем их в state"""
+    await callback.answer()
+    response = await api_client.get_user_stats(callback.from_user.id)
+    if not response or not response.get("success"):
+        await callback.message.answer(texts.LK_LOAD_ERROR, reply_markup=get_menu_keyboard())
+        return
+    masks = response.get("data", {}).get("available_masks", [])
+    await state.update_data(available_masks=masks)
+    await callback.message.answer(
+        texts.MASK_SELECT_MENU, reply_markup=get_mask_select_keyboard(masks)
+    )
+
+
+@handle_resolver_errors
+async def resolve_edit_mask_pick(callback: CallbackQuery, state: FSMContext):
+    """Выбран персонаж — показываем предупреждение об утере истории"""
+    await callback.answer()
+    masks = (await state.get_data()).get("available_masks", [])
+    idx = int(callback.data.removeprefix("mask_pick_"))
+    if idx >= len(masks):
+        return
+    await state.update_data(pending_mask=masks[idx])
+    await callback.message.answer(
+        texts.MASK_CHANGE_WARNING, reply_markup=get_mask_confirm_keyboard()
+    )
+
+
+@handle_resolver_errors
+async def resolve_edit_mask_confirm(callback: CallbackQuery, state: FSMContext):
+    """Подтверждена смена персонажа — отправляем запрос"""
+    await callback.answer()
+    mask_name = (await state.get_data()).get("pending_mask")
+    if not mask_name:
+        await callback.message.answer(texts.PROFILE_UNKNOWN_ERROR)
+        return
+    response = await api_client.update_mask(callback.from_user.id, mask_name)
+    if not response.get("success"):
+        await callback.message.answer(_profile_error_text(response))
+        return
+    await callback.message.answer(
+        texts.MASK_CHANGED_SUCCESS, reply_markup=get_profile_edit_keyboard()
+    )
+
+
+@handle_resolver_errors
+async def resolve_mask_cancel(callback: CallbackQuery, state: FSMContext):
+    """Отказ от смены персонажа — возврат в меню редактирования"""
+    await resolve_profile_edit_menu(callback, state)
+
+
+@handle_resolver_errors
+async def resolve_mask_create(callback: CallbackQuery):
+    """Кнопка «Создать Компаньона» — функция пока недоступна"""
+    await callback.answer()
+    await callback.message.answer(texts.MASK_CREATE_UNAVAILABLE)

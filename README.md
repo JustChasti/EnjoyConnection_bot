@@ -1,4 +1,4 @@
-# Joi Bot - Telegram Bot
+# EnjoyConnection Bot - Telegram Bot
 
 Telegram бот на базе aiogram для взаимодействия с AI-ассистентом "Джой". Бот принимает сообщения пользователей, отправляет их на backend API и возвращает ответы в Telegram.
 
@@ -15,7 +15,7 @@ Telegram бот на базе aiogram для взаимодействия с AI-
 ## Структура проекта
 
 ```
-joi_bot/
+EnjoyConnection_bot/
 ├── config/                    # Конфигурация
 │   ├── config.py              # Настройки приложения
 │   └── texts.py               # Все текстовые константы бота (приветствия, ошибки, формы сообщений)

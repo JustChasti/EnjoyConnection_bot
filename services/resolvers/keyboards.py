@@ -6,7 +6,8 @@ from aiogram.types import (
     ReplyKeyboardMarkup,
     KeyboardButton,
 )
-from config.config import PLAN_LABELS
+from config.config import PLAN_LABELS, MASK_SLOTS_COUNT
+from config import texts
 
 def get_back_to_admin_menu_keyboard():
     """Клавиатура с кнопкой 'Назад в меню'"""
@@ -99,7 +100,44 @@ def get_profile_edit_keyboard() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="Возраст", callback_data="pedit_age")],
         [InlineKeyboardButton(text="Пол", callback_data="pedit_gender")],
         [InlineKeyboardButton(text="Цель общения", callback_data="pedit_goal")],
+        [InlineKeyboardButton(text="Сменить Персонажа", callback_data="pedit_mask")],
         [InlineKeyboardButton(text="Назад", callback_data="pedit_to_lk")],
+    ])
+
+
+def get_mask_select_keyboard(available_masks: list[str]) -> InlineKeyboardMarkup:
+    """Меню выбора персонажа в личном кабинете.
+
+    Первые слоты занимают доступные маски, остальные до MASK_SLOTS_COUNT —
+    кнопки «Создать Компаньона». В callback_data маски кладётся индекс (лимит
+    callback_data — 64 байта, а имена компаньонов могут быть длинными), само имя
+    берётся из available_masks, сохранённых в FSM.
+    """
+    buttons = []
+    for i in range(MASK_SLOTS_COUNT):
+        if i < len(available_masks):
+            buttons.append([InlineKeyboardButton(
+                text=available_masks[i], callback_data=f"mask_pick_{i}")])
+        else:
+            buttons.append([InlineKeyboardButton(
+                text=texts.MASK_CREATE_BUTTON, callback_data="mask_create")])
+    buttons.append([InlineKeyboardButton(text="Назад", callback_data="pedit_back")])
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def get_survey_mask_keyboard() -> InlineKeyboardMarkup:
+    """Выбор персонажа в первичной анкете (две фиксированные маски, без генерации)"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Джой", callback_data="mask_goal_Joi")],
+        [InlineKeyboardButton(text="Грей", callback_data="mask_goal_Gray")],
+    ])
+
+
+def get_mask_confirm_keyboard() -> InlineKeyboardMarkup:
+    """Подтверждение смены персонажа (с потерей истории)"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Да", callback_data="mask_confirm")],
+        [InlineKeyboardButton(text="Нет", callback_data="mask_cancel")],
     ])
 
 

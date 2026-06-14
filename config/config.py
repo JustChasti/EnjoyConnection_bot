@@ -18,6 +18,8 @@ PLAN_LABELS = {
     "year":    "1 год",
 }
 
+MASK_SLOTS_COUNT = 5  # всего кнопок в меню выбора персонажа
+
 GENDER_LABELS = {"male": "Мужской", "female": "Женский"}
 GOAL_LABELS = {"best_friend": "Лучшие друзья", "romantic": "Романтические партнёры"}
 RELATIONSHIP_STAGE_LABELS = {
