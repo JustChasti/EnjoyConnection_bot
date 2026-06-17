@@ -75,6 +75,12 @@ class APIClient:
                                    json={"user_id": user_id, "goal": goal}
                                   )
 
+    async def update_mask(self, user_id: int, mask_name: str) -> dict[str, Any]:
+        "Сменить текущего персонажа (маску) пользователя"
+        return await self._request("PATCH", "/user/mask",
+                                   json={"user_id": user_id, "mask_name": mask_name}
+                                  )
+
     async def get_about(self) -> dict[str, Any]:
         "Получить информацию о боте"
         return await self._request("GET", "/about")

@@ -52,6 +52,7 @@ from services.resolvers.profile import (
     resolve_survey_gender,
     resolve_survey_age,
     resolve_survey_goal,
+    resolve_survey_mask,
     resolve_profile_edit_menu,
     resolve_edit_to_lk,
     resolve_edit_age_request,
@@ -60,6 +61,11 @@ from services.resolvers.profile import (
     resolve_edit_gender_set,
     resolve_edit_goal_request,
     resolve_edit_goal_set,
+    resolve_edit_mask_request,
+    resolve_edit_mask_pick,
+    resolve_edit_mask_confirm,
+    resolve_mask_cancel,
+    resolve_mask_create,
 )
 
 router = Router()
@@ -217,6 +223,10 @@ def setup_router():
     async def survey_goal(callback: CallbackQuery, state: FSMContext):
         await resolve_survey_goal(callback, state)
 
+    @router.callback_query(F.data.startswith("mask_goal_"))
+    async def survey_mask(callback: CallbackQuery, state: FSMContext):
+        await resolve_survey_mask(callback, state)
+
     @router.callback_query(F.data == "profile_edit")
     async def profile_edit(callback: CallbackQuery, state: FSMContext):
         await resolve_profile_edit_menu(callback, state)
@@ -252,6 +262,26 @@ def setup_router():
     @router.callback_query(F.data.startswith("pedit_goal_"))
     async def pedit_goal_set(callback: CallbackQuery):
         await resolve_edit_goal_set(callback)
+
+    @router.callback_query(F.data == "pedit_mask")
+    async def pedit_mask(callback: CallbackQuery, state: FSMContext):
+        await resolve_edit_mask_request(callback, state)
+
+    @router.callback_query(F.data.startswith("mask_pick_"))
+    async def mask_pick(callback: CallbackQuery, state: FSMContext):
+        await resolve_edit_mask_pick(callback, state)
+
+    @router.callback_query(F.data == "mask_confirm")
+    async def mask_confirm(callback: CallbackQuery, state: FSMContext):
+        await resolve_edit_mask_confirm(callback, state)
+
+    @router.callback_query(F.data == "mask_cancel")
+    async def mask_cancel(callback: CallbackQuery, state: FSMContext):
+        await resolve_mask_cancel(callback, state)
+
+    @router.callback_query(F.data == "mask_create")
+    async def mask_create(callback: CallbackQuery):
+        await resolve_mask_create(callback)
 
     # === ЛИЧНЫЙ КАБИНЕТ === #
 

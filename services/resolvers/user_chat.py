@@ -162,12 +162,14 @@ def build_lk_text(data: dict) -> str:
 
     gender = config.GENDER_LABELS.get(data.get("gender"), "не указан")
     age = data.get("age", "—")
+    current_mask = data.get("current_mask") or "не выбран"
 
     return texts.LK_PROFILE.format(
         sub_status=sub_status,
         free_messages=free_messages,
         gender=gender,
         age=age,
+        current_mask=current_mask,
     )
 
 
