@@ -128,8 +128,8 @@ def get_mask_select_keyboard(available_masks: list[str]) -> InlineKeyboardMarkup
 def get_survey_mask_keyboard() -> InlineKeyboardMarkup:
     """Выбор персонажа в первичной анкете (две фиксированные маски, без генерации)"""
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Джой", callback_data="mask_goal_Joi")],
-        [InlineKeyboardButton(text="Грей", callback_data="mask_goal_Gray")],
+        [InlineKeyboardButton(text="Джой 👧", callback_data="mask_goal_Джой")],
+        [InlineKeyboardButton(text="Грей 👦", callback_data="mask_goal_Грей")],
     ])
 
 
